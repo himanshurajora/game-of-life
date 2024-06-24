@@ -54,56 +54,39 @@ let cells: [number, number][] = [
   [32, 32],
   [32, 33],
   [32, 34],
-
 ];
 
 const calculateNextGeneration = (cells: [number, number][]) => {
-  // check for each cell if it should be alive or dead
   const nextGeneration: [number, number][] = [];
-  for (let x = 0; x < 100; x++) {
-    for (let y = 0; y < 100; y++) {
-      const neighbors = [
-        [x - 1, y - 1],
-        [x, y - 1],
-        [x + 1, y - 1],
-        [x - 1, y],
-        [x + 1, y],
-        [x - 1, y + 1],
-        [x, y + 1],
-        [x + 1, y + 1],
-      ];
+  const cellMap: Map<string, number> = new Map();
 
-      // check if the current cell is alive
-      const isAlive = cells.some(
-        ([cellX, cellY]) => cellX === x && cellY === y
-      );
+  for (const [x, y] of cells) {
+    for (let i = -1; i <= 1; i++) {
+      for (let j = -1; j <= 1; j++) {
+        if (i === 0 && j === 0) continue;
 
-      const aliveNeighbors = neighbors.filter(([x, y]) => {
-        return cells.some(([cellX, cellY]) => cellX === x && cellY === y);
-      });
+        const neighborX = x + i;
+        const neighborY = y + j;
+        const key = `${neighborX},${neighborY}`;
 
-      // if has less than 2 neighbors, it dies
-      if (aliveNeighbors.length < 2) {
-        continue;
+        if (cellMap.has(key)) {
+          cellMap.set(key, cellMap.get(key)! + 1);
+        } else {
+          cellMap.set(key, 1);
+        }
       }
+    }
+  }
 
-      // if the current cell is alive and has 2 or 3 neighbors, it stays alive
-      if (
-        isAlive &&
-        (aliveNeighbors.length === 2 || aliveNeighbors.length === 3)
-      ) {
-        nextGeneration.push([x, y]);
-      }
+  for (const [key, count] of cellMap) {
+    const [x, y] = key.split(",").map(Number);
 
-      // if it has more than 3 neighbors, it dies
-      if (aliveNeighbors.length > 3) {
-        continue;
-      }
-
-      // if the current cell is dead and has 3 neighbors, it becomes alive
-      if (!isAlive && aliveNeighbors.length === 3) {
-        nextGeneration.push([x, y]);
-      }
+    if (
+      count === 3 ||
+      (count === 2 &&
+        cells.some(([cellX, cellY]) => cellX === x && cellY === y))
+    ) {
+      nextGeneration.push([x, y]);
     }
   }
 
@@ -122,7 +105,7 @@ function render() {
 
   drawGrid();
 
-  requestAnimationFrame(render)
+  requestAnimationFrame(render);
 }
 
 render();

@@ -11,3 +11,15 @@ app {
   width: 100vw;
   height: 100vh;
 }
+
+.controls{
+  position: fixed;
+  top: 0;
+  left: 0;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+}

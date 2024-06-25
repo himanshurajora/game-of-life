@@ -36,13 +36,19 @@ function drawGrid() {
   }
 }
 
-function paintCell(x: number, y: number) {
+function paintCell(x: number, y: number, color = "yellow") {
   context.strokeStyle = "black";
-  context.fillStyle = "yellow";
+  context.fillStyle = color;
   context.fillRect(x * gridSize, y * gridSize, gridSize, gridSize);
 }
 
-let cells: [number, number][] = [
+let isStarted = false;
+
+let isMouseDown = false;
+let currentMousePosition: null | [number, number] = null;
+let speed = 900;
+
+let initialValue: [number, number][] = [
   [30, 30],
   [30, 31],
   [30, 32],
@@ -54,8 +60,22 @@ let cells: [number, number][] = [
   [32, 32],
   [32, 33],
   [32, 34],
+  [12, 12],
+  [12, 13],
+  [12, 14],
+  [13, 12],
+  [13, 13],
+  [13, 14],
+  [14, 12],
+  [14, 13],
+  [14, 14],
+  [14, 15],
+  [14, 16],
+  [14, 17],
 ];
 
+let cells: [number, number][] = initialValue;
+  
 const calculateNextGeneration = (cells: [number, number][]) => {
   const nextGeneration: [number, number][] = [];
   const cellMap: Map<string, number> = new Map();
@@ -93,15 +113,24 @@ const calculateNextGeneration = (cells: [number, number][]) => {
   return nextGeneration;
 };
 
+let lastRenderTime = performance.now();
+
 function render() {
+  const currentRenderTime = performance.now();
   context.fillStyle = "black";
   context.fillRect(0, 0, windowWidth, windowHeight);
-
   cells.forEach(([x, y]) => {
     paintCell(x, y);
   });
 
-  cells = calculateNextGeneration(cells);
+  if (currentMousePosition) {
+    paintCell(...currentMousePosition, "red");
+  }
+
+  if (isStarted && speed > 0 && (currentRenderTime - lastRenderTime) > (1000 - speed)) {
+    cells = calculateNextGeneration(cells);
+    lastRenderTime = currentRenderTime;
+  }
 
   drawGrid();
 
@@ -109,3 +138,91 @@ function render() {
 }
 
 render();
+
+// handle drawing cells
+canvas.addEventListener("click", (event) => {
+  cells.push(getCurrentCellCords(event));
+});
+
+canvas.addEventListener("mousedown", () => {
+  isMouseDown = true;
+});
+
+// if mouse move and mouse is clicked
+canvas.addEventListener("mousemove", (event) => {
+  currentMousePosition = getCurrentCellCords(event);
+  if (isMouseDown) {
+    // check if cell already exists
+    const cellIndex = cells.findIndex(([x, y]) => x === currentMousePosition![0] && y === currentMousePosition![1]);
+    if (cellIndex === -1) {
+      cells.push(getCurrentCellCords(event));
+    }
+  }
+});
+
+canvas.addEventListener("mouseup", () => {
+  isMouseDown = false;
+});
+
+// handle controls
+const start = document.getElementById("start") as HTMLButtonElement;
+const stop = document.getElementById("stop") as HTMLButtonElement;
+const clear = document.getElementById("clear") as HTMLButtonElement;
+const next = document.getElementById("next") as HTMLButtonElement;
+const reset = document.getElementById("reset") as HTMLButtonElement;
+
+
+start?.addEventListener("click", () => {
+  isStarted = true;
+  start.disabled = true;
+  stop.disabled = false;
+  start.hidden = true;
+  stop.hidden = false;
+});
+
+stop?.addEventListener("click", () => {
+  isStarted = false;
+  start.disabled = false;
+  stop.disabled = true;
+  start.hidden = false;
+  stop.hidden = true;
+});
+
+clear?.addEventListener("click", () => {
+  cells = [];
+  start.disabled = false;
+  start.hidden = false;
+  stop.disabled = true;
+  stop.hidden = true;
+  isStarted = false;
+});
+
+next?.addEventListener("click", () => {
+  cells = calculateNextGeneration(cells);
+});
+
+reset.addEventListener("click", () => {
+  cells = initialValue;
+});
+
+// on keyboard press right arrow key
+document.addEventListener("keydown", (event) => {
+  if (event.key === "ArrowRight") {
+    cells = calculateNextGeneration(cells);
+  }
+});
+
+// speed control
+const speedInput = document.getElementById("speed") as HTMLInputElement;
+
+speedInput.oninput = () => {
+  speed = Number(speedInput.value);
+}
+
+
+
+function getCurrentCellCords(event: MouseEvent): [number, number] {
+  const x = Math.floor(event.offsetX / gridSize);
+  const y = Math.floor(event.offsetY / gridSize);
+  return [x, y];
+}

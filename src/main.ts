@@ -81,8 +81,8 @@ const calculateNextGeneration = (cells: [number, number][]) => {
   const cellMap: Map<string, number> = new Map();
 
   for (const [x, y] of cells) {
-    for (let i = -1; i <= 1; i++) {
-      for (let j = -1; j <= 1; j++) {
+    for (let i = -2; i <= 2; i++) {
+      for (let j = -2; j <= 2; j++) {
         if (i === 0 && j === 0) continue;
 
         const neighborX = x + i;
@@ -140,7 +140,7 @@ function render() {
 render();
 
 // handle drawing cells
-canvas.addEventListener("click", (event) => {
+canvas.addEventListener("mouseup", (event) => {
   cells.push(getCurrentCellCords(event));
 });
 
